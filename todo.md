@@ -1,31 +1,31 @@
 # Elite Companion — Work Tracker
 
-## Phase 1: Project Scaffold + Config
+## Phase 1: Project Scaffold + Config ✅
 
-- [ ] Create `pyproject.toml` with project metadata and dependencies
-- [ ] Create `requirements.txt` (`watchdog`, `pyserial`, `psutil`, `pystray`, `Pillow`)
-- [ ] Create `elite_companion/` package with `__init__.py`
-- [ ] Create `elite_companion/config.py`
-  - [ ] Define config schema (`serial_port`, `baud_rate`, `journal_folder`, `send_interval_ms`)
-  - [ ] Auto-detect journal folder from `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\`
-  - [ ] Load config from `%APPDATA%\EliteCompanion\config.json` (create with defaults if missing)
-  - [ ] Save config back to disk
+- [x] Create `pyproject.toml` with project metadata and dependencies
+- [x] Create `requirements.txt` (`watchdog`, `pyserial`, `psutil`, `pystray`, `Pillow`)
+- [x] Create `elite_companion/` package with `__init__.py`
+- [x] Create `elite_companion/config.py`
+  - [x] Define config schema (`serial_port`, `baud_rate`, `journal_folder`, `send_interval_ms`)
+  - [x] Auto-detect journal folder from `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\`
+  - [x] Load config from `%APPDATA%\EliteCompanion\config.json` (create with defaults if missing)
+  - [x] Save config back to disk
 
-## Phase 2: Game State Model
+## Phase 2: Game State Model ✅
 
-- [ ] Create `elite_companion/game_state.py`
-  - [ ] Define `GameState` dataclass with all tracked fields
-  - [ ] Add `threading.Lock` for write operations
-  - [ ] Implement `to_payload()` method that serialises to the serial JSON schema
-  - [ ] Ensure `null` (not omitted) for fields with no value (lat/lon/alt/hdg when not on planet)
+- [x] Create `elite_companion/game_state.py`
+  - [x] Define `GameState` dataclass with all tracked fields
+  - [x] Add `threading.Lock` for write operations
+  - [x] Implement `to_payload()` method that serialises to the serial JSON schema
+  - [x] Ensure `null` (not omitted) for fields with no value (lat/lon/alt/hdg when not on planet)
 
-## Phase 3: Game Process Detection
+## Phase 3: Game Process Detection ✅
 
-- [ ] Create `elite_companion/watcher.py`
-  - [ ] Poll for `EliteDangerous64.exe` every 5 seconds using `psutil`
-  - [ ] Emit start event → activate journal + status file watchers
-  - [ ] Emit stop event → deactivate watchers, notify serial sender
-  - [ ] Run in a daemon thread; stop cleanly on app shutdown
+- [x] Create `elite_companion/watcher.py`
+  - [x] Poll for `EliteDangerous64.exe` every 5 seconds using `psutil`
+  - [x] Emit start event → activate journal + status file watchers
+  - [x] Emit stop event → deactivate watchers, notify serial sender
+  - [x] Run in a daemon thread; stop cleanly on app shutdown
 
 ## Phase 4: Status.json Reader
 

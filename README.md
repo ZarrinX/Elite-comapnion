@@ -27,9 +27,9 @@ The app reads the game's journal files in real time, aggregates state, and sends
 ```
 Elite-comapnion/
 ├── elite_companion/        # Windows Python app (host)
-├── elite-companion-display/ # ESP32 firmware (PlatformIO / Arduino)
-│   ├── platformio.ini
-│   └── src/main.cpp
+├── arduino/
+│   └── firmware/
+│       └── firmware.ino  # ESP32 firmware (Arduino IDE)
 ├── AGENTS.md
 ├── README.md
 └── todo.md
@@ -83,15 +83,15 @@ Fields with no current value (e.g. `lat`/`lon` when not near a planet) are sent 
 
 ## Getting Started
 
-```bash
+```powershell
 # Install dependencies
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 
 # Run in development
-python -m elite_companion
+py -m elite_companion
 
 # Build standalone .exe
-pyinstaller elite_companion.spec
+py -m PyInstaller elite_companion.spec
 ```
 
 On first run the app will auto-detect the journal folder at:

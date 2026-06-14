@@ -186,15 +186,15 @@ The Windows app sends **newline-terminated JSON** (`\n`) at a configurable inter
 
 ## Build and Run
 
-```bash
+```powershell
 # Install dependencies
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 
 # Run in development
-python -m elite_companion
+py -m elite_companion
 
 # Build standalone exe
-pyinstaller elite_companion.spec
+py -m PyInstaller elite_companion.spec
 ```
 
 ## Hardware Reference (POC)
@@ -206,18 +206,15 @@ pyinstaller elite_companion.spec
 
 ## ESP32 Firmware
 
-The firmware lives in `elite-companion-display/` — a PlatformIO (Arduino framework) project.
+The firmware lives in `arduino/` — an Arduino IDE sketch targeting the Freenove ESP32-S3 WROOM.
 
 | Item | Detail |
 |------|--------|
-| PlatformIO board | `freenove_esp32_s3_wroom` |
-| Framework | Arduino |
-| Entry point | `elite-companion-display/src/main.cpp` |
-| Config | `elite-companion-display/platformio.ini` |
+| Board | `Freenove ESP32-S3 WROOM` |
+| IDE | Arduino IDE |
+| Entry point | `arduino/firmware/firmware.ino` |
 
 The firmware is responsible for:
 - Receiving newline-delimited JSON over USB serial
 - Parsing the payload
 - Rendering data on the SSD1309 128×64 OLED via I²C
-
-Build and upload via PlatformIO CLI or the PlatformIO VS Code extension.
