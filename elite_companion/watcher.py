@@ -64,7 +64,12 @@ class ProcessWatcher:
 
     def _poll_loop(self) -> None:
         while self._running:
-            detected = self._is_game_running()
+            try:
+                detected = self._is_game_running()
+            except Exception:
+                logger.exception("Error checking for game process — will retry")
+                time.sleep(_POLL_INTERVAL)
+                continue
 
             if detected and not self._game_running:
                 self._game_running = True

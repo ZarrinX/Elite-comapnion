@@ -27,92 +27,92 @@
   - [x] Emit stop event → deactivate watchers, notify serial sender
   - [x] Run in a daemon thread; stop cleanly on app shutdown
 
-## Phase 4: Status.json Reader
+## Phase 4: Status.json Reader ✅
 
-- [ ] Create `elite_companion/status_reader.py`
-  - [ ] Register watchdog `FileSystemEventHandler` for `Status.json` changes
-  - [ ] Read entire file on each change event (do not hold file handle open)
-  - [ ] Decode `Flags` bitmask: Docked, Landed, Shields Up, Supercruise, Hardpoints, Scooping, Low Fuel, Overheating, In Danger, Being Interdicted, FSD Mass Locked, FSD Charging, FSD Cooldown, FSD Jump in Progress
-  - [ ] Extract `Pips` `[SYS, ENG, WEP]`
-  - [ ] Extract `Fuel.FuelMain`, `Fuel.FuelReservoir`
-  - [ ] Extract `Cargo`, `LegalState`
-  - [ ] Extract `Latitude`, `Longitude`, `Altitude`, `Heading` (set `on_planet` flag from Flags bit 21)
-  - [ ] Extract `Destination.Name` as nav target fallback
-  - [ ] Write all extracted values into `GameState` under lock
-  - [ ] Skip gracefully on `json.JSONDecodeError` or missing file
+- [x] Create `elite_companion/status_reader.py`
+  - [x] Register watchdog `FileSystemEventHandler` for `Status.json` changes
+  - [x] Read entire file on each change event (do not hold file handle open)
+  - [x] Decode `Flags` bitmask: Docked, Landed, Shields Up, Supercruise, Hardpoints, Scooping, Low Fuel, Overheating, In Danger, Being Interdicted, FSD Mass Locked, FSD Charging, FSD Cooldown, FSD Jump in Progress
+  - [x] Extract `Pips` `[SYS, ENG, WEP]`
+  - [x] Extract `Fuel.FuelMain`, `Fuel.FuelReservoir`
+  - [x] Extract `Cargo`, `LegalState`
+  - [x] Extract `Latitude`, `Longitude`, `Altitude`, `Heading` (set `on_planet` flag from Flags bit 21)
+  - [x] Extract `Destination.Name` as nav target fallback
+  - [x] Write all extracted values into `GameState` under lock
+  - [x] Skip gracefully on `json.JSONDecodeError` or missing file
 
-## Phase 5: Journal Log Reader
+## Phase 5: Journal Log Reader ✅
 
-- [ ] Create `elite_companion/journal.py`
-  - [ ] Find the most recent `Journal.*.log` file in the journal folder
-  - [ ] Replay all existing lines on startup to reconstruct current state
-  - [ ] Register watchdog handler to tail the file for new lines in real time
-  - [ ] Detect new `Journal.*.log` file creation (new game session) and switch tail to new file
-  - [ ] Handle each event type:
-    - [ ] `LoadGame` → `ship`, `fuel_level`, `fuel_cap`, `credits`
-    - [ ] `Location` → `star_system`, `body`, `docked`
-    - [ ] `Loadout` → `ship`, `ship_name`, `hull`, `fuel_cap`, `max_jump_range`
-    - [ ] `FSDJump` → `star_system`, `fuel_level`, `jump_dist`
-    - [ ] `FSDTarget` → `jump_target`, `jumps_remaining`
-    - [ ] `NavRoute` → `jump_target` from first route entry
-    - [ ] `NavRouteClear` → clear route/target data
-    - [ ] `StartJump` → set `fsd` state to `"jumping"`
-    - [ ] `SupercruiseEntry` / `SupercruiseExit` → update `star_system`
-    - [ ] `Docked` → `station_name`, `star_system`, set docked flag
-    - [ ] `Undocked` → clear station, clear docked flag
-    - [ ] `ShieldState` → `shields`
-    - [ ] `HullDamage` → `hull`
-    - [ ] `UnderAttack` → set `attack` flag (auto-clear after interval)
-  - [ ] Open files with `encoding="utf-8"`; skip lines on `json.JSONDecodeError`
+- [x] Create `elite_companion/journal.py`
+  - [x] Find the most recent `Journal.*.log` file in the journal folder
+  - [x] Replay all existing lines on startup to reconstruct current state
+  - [x] Register watchdog handler to tail the file for new lines in real time
+  - [x] Detect new `Journal.*.log` file creation (new game session) and switch tail to new file
+  - [x] Handle each event type:
+    - [x] `LoadGame` → `ship`, `fuel_level`, `fuel_cap`, `credits`
+    - [x] `Location` → `star_system`, `body`, `docked`
+    - [x] `Loadout` → `ship`, `ship_name`, `hull`, `fuel_cap`, `max_jump_range`
+    - [x] `FSDJump` → `star_system`, `fuel_level`, `jump_dist`
+    - [x] `FSDTarget` → `jump_target`, `jumps_remaining`
+    - [x] `NavRoute` → `jump_target` from first route entry
+    - [x] `NavRouteClear` → clear route/target data
+    - [x] `StartJump` → set `fsd` state to `"jumping"`
+    - [x] `SupercruiseEntry` / `SupercruiseExit` → update `star_system`
+    - [x] `Docked` → `station_name`, `star_system`, set docked flag
+    - [x] `Undocked` → clear station, clear docked flag
+    - [x] `ShieldState` → `shields`
+    - [x] `HullDamage` → `hull`
+    - [x] `UnderAttack` → set `attack` flag (auto-clear after interval)
+  - [x] Open files with `encoding="utf-8"`; skip lines on `json.JSONDecodeError`
 
-## Phase 6: Serial Sender
+## Phase 6: Serial Sender ✅
 
-- [ ] Create `elite_companion/serial_sender.py`
-  - [ ] Open configured COM port at configured baud rate
-  - [ ] Send `GameState.to_payload()` as newline-terminated JSON at `send_interval_ms`
-  - [ ] Send immediately on state change (in addition to interval)
-  - [ ] Handle port loss gracefully: log error, mark disconnected, retry every 5 seconds
-  - [ ] Do not propagate serial exceptions to watcher threads
-  - [ ] Close port cleanly on shutdown
+- [x] Create `elite_companion/serial_sender.py`
+  - [x] Open configured COM port at configured baud rate
+  - [x] Send `GameState.to_payload()` as newline-terminated JSON at `send_interval_ms`
+  - [x] Send immediately on state change (in addition to interval)
+  - [x] Handle port loss gracefully: log error, mark disconnected, retry every 5 seconds
+  - [x] Do not propagate serial exceptions to watcher threads
+  - [x] Close port cleanly on shutdown
 
-## Phase 7: System Tray + Config UI
+## Phase 7: System Tray + Config UI ✅
 
-- [ ] Create `elite_companion/tray.py`
-  - [ ] Render tray icon using Pillow (draw simple icon programmatically; no external asset required for POC)
-  - [ ] Tray menu items: **Open Config**, **Status** (game detected / not detected, serial connected / disconnected), **Quit**
-  - [ ] Config window (tkinter):
-    - [ ] COM port dropdown (enumerate available ports via `serial.tools.list_ports`)
-    - [ ] Baud rate field (default 115200)
-    - [ ] Journal folder path field + Browse button
-    - [ ] Send interval (ms) field
-    - [ ] Live status indicators: game detected, serial connected
-    - [ ] Save button → write config and apply without restart
-  - [ ] Tray icon tooltip shows current game/serial state
+- [x] Create `elite_companion/tray.py`
+  - [x] Render tray icon using Pillow (draw simple icon programmatically; no external asset required for POC)
+  - [x] Tray menu items: **Open Config**, **Status** (game detected / not detected, serial connected / disconnected), **Quit**
+  - [x] Config window (tkinter):
+    - [x] COM port dropdown (enumerate available ports via `serial.tools.list_ports`)
+    - [x] Baud rate field (default 115200)
+    - [x] Journal folder path field + Browse button
+    - [x] Send interval (ms) field
+    - [x] Live status indicators: game detected, serial connected
+    - [x] Save button → write config and apply without restart
+  - [x] Tray icon tooltip shows current game/serial state
 
-## Phase 8: Entry Point + Thread Orchestration
+## Phase 8: Entry Point + Thread Orchestration ✅
 
-- [ ] Create `elite_companion/main.py`
-  - [ ] Instantiate and start all threads: process watcher, serial sender, tray
-  - [ ] Wire game-detected/stopped events to start/stop file watchers
-  - [ ] Handle `SIGINT` / window close → graceful shutdown of all threads
-  - [ ] Support `python -m elite_companion` invocation
+- [x] Create `elite_companion/main.py`
+  - [x] Instantiate and start all threads: process watcher, serial sender, tray
+  - [x] Wire game-detected/stopped events to start/stop file watchers
+  - [x] Handle `SIGINT` / window close → graceful shutdown of all threads
+  - [x] Support `python -m elite_companion` invocation
 
-## Phase 9: Error Handling + Robustness
+## Phase 9: Error Handling + Robustness ✅
 
-- [ ] Verify no thread can crash the app on serial port loss
-- [ ] Verify journal reader recovers from file-not-found (game not running, folder wrong)
-- [ ] Verify watchdog stops cleanly when game exits mid-session
-- [ ] Verify `Status.json` read-on-change does not hold a file lock
-- [ ] Add logging (`logging` stdlib) to file at `%APPDATA%\EliteCompanion\app.log`
+- [x] Verify no thread can crash the app on serial port loss
+- [x] Verify journal reader recovers from file-not-found (game not running, folder wrong)
+- [x] Verify watchdog stops cleanly when game exits mid-session
+- [x] Verify `Status.json` read-on-change does not hold a file lock
+- [x] Add logging (`logging` stdlib) to file at `%APPDATA%\EliteCompanion\app.log`
 
-## Phase 10: Packaging
+## Phase 10: Packaging ✅
 
-- [ ] Create `elite_companion.spec` for PyInstaller
-  - [ ] Single-file `.exe` output
-  - [ ] Bundle tray icon asset
-  - [ ] Hide console window (`noconsole=True`)
-- [ ] Test packaged `.exe` on clean machine (no Python installed)
-- [ ] Update `README.md` with install and usage instructions
+- [x] Create `elite_companion.spec` for PyInstaller
+  - [x] Single-file `.exe` output
+  - [x] Bundle tray icon asset
+  - [x] Hide console window (`noconsole=True`)
+- [x] Test packaged `.exe` on clean machine (no Python installed)
+- [x] Update `README.md` with install and usage instructions
 
 ---
 

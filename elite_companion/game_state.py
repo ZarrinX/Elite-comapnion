@@ -7,7 +7,18 @@ acceptable for a display use-case.
 
 import threading
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Callable, Optional
+
+
+def _round_number(value, digits: int):
+    """Round numeric values, returning None for unexpected journal shapes."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return round(value, digits)
+    return None
 
 
 @dataclass
@@ -16,6 +27,7 @@ class GameState:
     # Lock — acquire for all writes                                        #
     # ------------------------------------------------------------------ #
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
+    _on_change: Optional[Callable[[], None]] = field(default=None, repr=False)
 
     # ------------------------------------------------------------------ #
     # Location / navigation                                                #
@@ -99,12 +111,21 @@ class GameState:
     # ------------------------------------------------------------------ #
     # Write helpers                                                        #
     # ------------------------------------------------------------------ #
+    def set_change_callback(self, callback: Callable[[], None]) -> None:
+        """Set a callback fired after any field changes."""
+        self._on_change = callback
+
     def update(self, **kwargs) -> None:
         """Thread-safe bulk update of one or more fields."""
+        changed = False
         with self._lock:
             for key, value in kwargs.items():
-                if hasattr(self, key):
+                if hasattr(self, key) and getattr(self, key) != value:
                     setattr(self, key, value)
+                    changed = True
+
+        if changed and self._on_change:
+            self._on_change()
 
     # ------------------------------------------------------------------ #
     # Serialisation                                                        #
@@ -120,8 +141,8 @@ class GameState:
             "sys":        self.star_system,
             "tgt":        self.jump_target,
             "jumps":      self.jumps_remaining,
-            "fuel":       round(self.fuel, 2) if self.fuel is not None else None,
-            "fuel_cap":   round(self.fuel_cap, 2) if self.fuel_cap is not None else None,
+            "fuel":       _round_number(self.fuel, 2),
+            "fuel_cap":   _round_number(self.fuel_cap, 2),
             "low_fuel":   self.low_fuel,
             "pips":       list(self.pips),
             "shields":    self.shields,
@@ -129,11 +150,11 @@ class GameState:
             "fsd":        self.fsd,
             "legal":      self.legal,
             "attack":     self.under_attack,
-            "lat":        round(self.lat, 4) if self.lat is not None else None,
-            "lon":        round(self.lon, 4) if self.lon is not None else None,
-            "alt":        round(self.alt, 1) if self.alt is not None else None,
-            "hdg":        round(self.hdg, 1) if self.hdg is not None else None,
+            "lat":        _round_number(self.lat, 4),
+            "lon":        _round_number(self.lon, 4),
+            "alt":        _round_number(self.alt, 1),
+            "hdg":        _round_number(self.hdg, 1),
             "on_planet":  self.on_planet,
             "ship":       self.ship,
-            "hull":       round(self.hull, 3),
+            "hull":       _round_number(self.hull, 3),
         }

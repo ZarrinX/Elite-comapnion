@@ -125,7 +125,23 @@ EliteDangerous64.exe (process)
 
 The Windows app sends **newline-terminated JSON** (`\n`) at a configurable interval (default 500ms) or immediately on state change.
 
-### Payload Schema
+### Current OLED POC Payload Schema
+
+For the current three-line OLED firmware, the Windows app sends a compact display payload:
+
+```json
+{
+  "type": "status",
+  "seq": 12,
+  "ship": "Asp Explorer",
+  "sys": "Sol",
+  "tgt": "Alpha Centauri"
+}
+```
+
+`seq` is a heartbeat counter so serial traffic can be distinguished from repeated unchanged values.
+
+### Full State Payload Schema
 
 ```json
 {
@@ -160,6 +176,8 @@ The Windows app sends **newline-terminated JSON** (`\n`) at a configurable inter
 
 **Null handling:** Fields that have no value yet (e.g. `lat`/`lon`/`alt`/`hdg` when not on a planet) must be sent as `null`, not omitted, so the ESP32 parser always receives a consistent schema.
 
+**Firmware buffer sizing:** Whenever the serial payload schema changes, always confirm the ESP32 serial line buffer and ArduinoJson document/filter sizes can accept the full newline-delimited JSON payload without truncation or parse failure.
+
 ## Config Schema (`config.json`)
 
 ```json
@@ -181,6 +199,7 @@ The Windows app sends **newline-terminated JSON** (`\n`) at a configurable inter
 - **Journal file rotation**: Elite creates a new `Journal.*.log` file each game session. `journal.py` must detect new file creation via watchdog and switch to tailing the new file, discarding the old tail.
 - **Encoding**: All journal files are UTF-8. Open with `encoding="utf-8"`.
 - **Line parsing**: Each journal line is independent JSON. Skip lines that fail to parse (`json.JSONDecodeError`) without crashing.
+- **Serial buffer safety**: Any change to payload shape or firmware parsing must explicitly account for serial input buffer length and ArduinoJson capacity/filter sizing on the ESP32.
 - **Status.json race**: The file is replaced atomically by the game. Read the entire file on each change event; do not hold a file handle open.
 - **Process detection polling interval**: 5 seconds is sufficient. Do not use a watchdog for process detection.
 
@@ -217,4 +236,5 @@ The firmware lives in `arduino/` — an Arduino IDE sketch targeting the Freenov
 The firmware is responsible for:
 - Receiving newline-delimited JSON over USB serial
 - Parsing the payload
+- Maintaining serial input and JSON parse buffers large enough for the full host payload
 - Rendering data on the SSD1309 128×64 OLED via I²C

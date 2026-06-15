@@ -1,0 +1,14 @@
+# PyInstaller build output
+build/
+dist/
+*.spec.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# App runtime
+*.log
