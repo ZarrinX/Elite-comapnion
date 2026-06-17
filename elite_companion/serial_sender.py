@@ -40,6 +40,7 @@ class SerialSender:
         self._last_send_at = 0.0
         self._sequence = 0
         self._last_heartbeat_log = 0
+        self._display_enabled = False
 
     # ------------------------------------------------------------------ #
     # Public API                                                           #
@@ -52,6 +53,13 @@ class SerialSender:
     def trigger_send(self) -> None:
         """Request an immediate send on the next loop iteration."""
         self._send_event.set()
+
+    def set_display_enabled(self, enabled: bool) -> None:
+        """Enable or blank the OLED display output."""
+        if self._display_enabled != enabled:
+            self._display_enabled = enabled
+            self._last_display_values = None
+            self.trigger_send()
 
     def start(self) -> None:
         self._running = True
@@ -134,15 +142,20 @@ class SerialSender:
             self._port.write(line.encode("utf-8"))
             self._drain_device_messages()
             self._last_send_at = time.monotonic()
-            display_values = (payload.get("ship"), payload.get("sys"), payload.get("tgt"))
-            if display_values != self._last_display_values:
-                self._last_display_values = display_values
-                logger.info(
-                    "Serial payload display fields: ship=%r sys=%r tgt=%r",
-                    display_values[0],
-                    display_values[1],
-                    display_values[2],
-                )
+            if payload.get("type") == "blank":
+                if self._last_display_values != ("blank",):
+                    self._last_display_values = ("blank",)
+                    logger.info("Serial payload display fields: blank")
+            else:
+                display_values = (payload.get("ship"), payload.get("sys"), payload.get("tgt"))
+                if display_values != self._last_display_values:
+                    self._last_display_values = display_values
+                    logger.info(
+                        "Serial payload display fields: ship=%r sys=%r tgt=%r",
+                        display_values[0],
+                        display_values[1],
+                        display_values[2],
+                    )
             if payload["seq"] - self._last_heartbeat_log >= 20:
                 self._last_heartbeat_log = payload["seq"]
                 logger.info("Serial heartbeat: seq=%s bytes=%s",
@@ -173,6 +186,12 @@ class SerialSender:
     def _display_payload(self) -> dict:
         """Return the compact payload needed by the current OLED firmware."""
         self._sequence += 1
+        if not self._display_enabled:
+            return {
+                "type": "blank",
+                "seq": self._sequence,
+            }
+
         return {
             "type": "status",
             "seq": self._sequence,

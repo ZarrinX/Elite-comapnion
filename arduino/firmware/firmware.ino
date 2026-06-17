@@ -95,6 +95,11 @@ void renderDisplay() {
   display.display();
 }
 
+void blankDisplay() {
+  display.clearDisplay();
+  display.display();
+}
+
 void applyPayload(const char *line) {
   jsonDoc.clear();
   DeserializationError error = deserializeJson(
@@ -112,6 +117,17 @@ void applyPayload(const char *line) {
     Serial.print("{\"ack\":");
     Serial.print(parsedPayloads);
     Serial.println("}");
+  }
+
+  const char *type = jsonDoc["type"] | "";
+  if (strcmp(type, "blank") == 0) {
+    renderPending = false;
+    copyText(currentShip, sizeof(currentShip), "--");
+    copyText(currentSystem, sizeof(currentSystem), "--");
+    copyText(jumpDestination, sizeof(jumpDestination), "--");
+    blankDisplay();
+    lastRenderAt = millis();
+    return;
   }
 
   char nextShip[FIELD_LIMIT];
@@ -139,6 +155,7 @@ void applyPayload(const char *line) {
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
+  jsonFilter["type"] = true;
   jsonFilter["ship"] = true;
   jsonFilter["sys"] = true;
   jsonFilter["tgt"] = true;

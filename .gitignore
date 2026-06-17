@@ -12,3 +12,6 @@ venv/
 
 # App runtime
 *.log
+
+# Local testing notes
+testing/

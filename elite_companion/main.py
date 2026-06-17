@@ -110,6 +110,7 @@ class App:
     # ------------------------------------------------------------------ #
 
     def _on_game_start(self) -> None:
+        self._serial_sender.set_display_enabled(True)
         folder = self._config.get("journal_folder")
         if not folder:
             logger.warning("Game detected but journal_folder is not configured")
@@ -134,6 +135,7 @@ class App:
         logger.info("File watchers started (folder: %s)", folder)
 
     def _on_game_stop(self) -> None:
+        self._serial_sender.set_display_enabled(False)
         self._stop_file_watchers()
         self._tray.update_status(
             game_running=False,

@@ -223,6 +223,29 @@ py -m PyInstaller elite_companion.spec
 - **I²C wiring**: SDA → GPIO21, SCL → GPIO22
 - **USB serial**: default 115200 baud
 
+## Display Hardware Findings
+
+The verified expanded hardware setup supports three displays at once:
+
+| Position | Display | Bus | Pins |
+|----------|---------|-----|------|
+| Left | ST7789 TFT 170×320 | HSPI | SCLK GPIO14, MOSI GPIO13, CS GPIO27, DC GPIO33, RST GPIO26 |
+| Right | ST7789 TFT 170×320 | VSPI | SCLK GPIO18, MOSI GPIO23, CS GPIO25, DC GPIO16, RST GPIO4 |
+| Auxiliary | SSD1309 OLED 128×64 | I²C | SDA GPIO21, SCL GPIO22 |
+
+These pins are the known-good ST7789/TFT topology from hardware testing. Keep the two TFTs on separate SPI buses (`HSPI` and `VSPI`) unless there is a deliberate retest, and keep the OLED on I²C. The OLED has been verified to operate at the same time as both TFT displays without SPI/I²C conflicts.
+
+When changing ESP32 display firmware:
+
+- Prefer the verified ST7789 split-bus pin map above for dual TFT work.
+- Use `Adafruit_GFX`/`Adafruit_ST7789` for the TFTs and U8g2 or Adafruit SSD1306-compatible support for the SSD1309 OLED, matching the current sketch being edited.
+- Account for Adafruit_GFX text rendering cost. A Matrix-style text animation across the TFTs measured about 8-9 FPS; many small text draws and repeated full-screen updates are the limiting factor more than ESP32 CPU saturation.
+- For smoother TFT animation, reduce per-frame text draw count, update only dirty regions where practical, and avoid unnecessary full-screen clears.
+- The dual ST7789 displays have been verified as one virtual 340×320 display for cross-screen animation; preserve the left/right orientation and coordinate assumptions when building dual-screen effects.
+- The LCARS dual-TFT demo plus OLED scrolling text has been verified stable with all three displays active.
+- The SSD1309 OLED may produce audible buzz/whine while still functioning normally. The likely causes are charge-pump or passive-component resonance and frequent full-buffer refreshes.
+- If OLED noise is an issue, test slower refresh intervals first (`150ms`, `250ms`, `500ms`), then lower contrast (`40`, `80`, `120`), and consider local decoupling near the OLED (`0.1uF` ceramic plus `10uF` electrolytic).
+
 ## ESP32 Firmware
 
 The firmware lives in `arduino/` — an Arduino IDE sketch targeting the Freenove ESP32-S3 WROOM.

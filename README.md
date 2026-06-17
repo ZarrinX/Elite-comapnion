@@ -9,7 +9,9 @@ The app reads the game's journal files in real time, aggregates state, and sends
 - Automatically detects when Elite: Dangerous is running and activates file watchers
 - Reads `Status.json` every ~1–4 seconds: fuel, pips (SYS/ENG/WEP), shields, FSD state, heading/altitude, legal status
 - Tails live Journal log events: star system, jump target, route progress, hull health, docking state
-- Streams newline-delimited JSON over USB serial to an ESP32 at a configurable interval
+- Reads `NavRoute.json` to populate the next jump destination for the OLED
+- Streams compact newline-delimited JSON over USB serial to an ESP32 at a configurable interval
+- Blanks the OLED automatically when Elite: Dangerous is not running to reduce burn-in risk
 - Runs silently in the system tray with a small config window for port/folder settings
 - Handles serial disconnects gracefully — retries every 5 seconds without crashing
 
@@ -43,7 +45,8 @@ EliteDangerous64.exe
         ▼
   watcher.py  ──── watchdog FileSystemEventHandler
         ├── status_reader.py   (Status.json on every file change)
-        └── journal.py         (Journal.*.log replay + live tail)
+        ├── journal.py         (Journal.*.log replay + live tail)
+        └── nav_route_reader.py (NavRoute.json next jump target)
                     ▼
               game_state.py    (single source of truth)
                     ▼
@@ -52,34 +55,36 @@ EliteDangerous64.exe
 
 ## Serial Payload
 
+The current OLED proof-of-concept receives a compact display payload rather than the full internal game state:
+
 ```json
 {
   "type": "status",
-  "sys": "LHS 3885",
-  "tgt": "Sol",
-  "jumps": 3,
-  "fuel": 12.4,
-  "fuel_cap": 16.0,
-  "low_fuel": false,
-  "pips": [4, 4, 4],
-  "shields": true,
-  "hardpoints": false,
-  "fsd": "ready",
-  "legal": "Clean",
-  "attack": false,
-  "lat": null,
-  "lon": null,
-  "alt": null,
-  "hdg": null,
-  "on_planet": false,
+  "seq": 12,
   "ship": "Asp Explorer",
-  "hull": 1.0
+  "sys": "LHS 3885",
+  "tgt": "Sol"
 }
 ```
 
-`fsd` values: `"ready"` | `"charging"` | `"cooldown"` | `"masslock"` | `"jumping"`
+`seq` is a heartbeat counter used for serial diagnostics.
 
-Fields with no current value (e.g. `lat`/`lon` when not near a planet) are sent as `null` so the ESP32 always receives a consistent schema.
+When Elite is not running, the app sends a blanking command:
+
+```json
+{
+  "type": "blank",
+  "seq": 13
+}
+```
+
+The firmware clears the OLED for `type: "blank"`. This prevents static text from sitting on the display while the game is closed.
+
+The richer `GameState.to_payload()` schema still exists internally for future multi-display/status work.
+Its `fsd` values are `"ready"` | `"charging"` | `"cooldown"` | `"masslock"` | `"jumping"`.
+Fields with no current value in that full schema should remain explicit `null` values rather than omitted.
+
+The firmware uses fixed-size serial and JSON buffers, so any future wire-format expansion must include a buffer-size check on the ESP32 side.
 
 ## Getting Started
 
@@ -93,6 +98,8 @@ py -m elite_companion
 # Build standalone .exe
 py -m PyInstaller elite_companion.spec
 ```
+
+After changing firmware, upload `arduino/firmware/firmware.ino` from the Arduino IDE.
 
 On first run the app will auto-detect the journal folder at:
 ```
@@ -118,4 +125,22 @@ Stored at `%APPDATA%\EliteCompanion\config.json`:
 - Python 3.11+
 - Elite: Dangerous (Horizons or Odyssey)
 - ESP32 connected via USB
+- Arduino IDE libraries for firmware:
+  - Adafruit SSD1306
+  - Adafruit GFX Library
+  - ArduinoJson
 
+## Diagnostics
+
+The app writes logs to:
+
+```
+%APPDATA%\EliteCompanion\app.log
+```
+
+Useful serial log lines include:
+
+- `Serial payload display fields: ...`
+- `Serial payload display fields: blank`
+- `Serial heartbeat: seq=...`
+- `ESP32: {"ack":...}`
